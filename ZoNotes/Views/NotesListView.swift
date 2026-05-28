@@ -5,6 +5,7 @@ struct NotesListView: View {
 
     @Environment(\.managedObjectContext) private var ctx
     @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var biometric: BiometricAuth
 
     @FetchRequest(
         sortDescriptors: [
@@ -26,6 +27,8 @@ struct NotesListView: View {
     @State private var showSettings = false
     @State private var showFolderManager = false
     @State private var newNote: Note?
+    @State private var openedNoteID: NSManagedObjectID?
+    @State private var lockErrorMessage: String?
 
     private var filtered: [Note] {
         notes.filter { note in
@@ -59,6 +62,22 @@ struct NotesListView: View {
                     NoteEditorView(note: note)
                 }
             }
+            .navigationDestination(isPresented: Binding(
+                get: { openedNoteID != nil },
+                set: { if !$0 { openedNoteID = nil } }
+            )) {
+                if let id = openedNoteID,
+                   let note = try? ctx.existingObject(with: id) as? Note {
+                    NoteEditorView(note: note)
+                }
+            }
+            .alert("Не удалось разблокировать",
+                   isPresented: Binding(get: { lockErrorMessage != nil },
+                                        set: { if !$0 { lockErrorMessage = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(lockErrorMessage ?? "")
+            }
         }
     }
 
@@ -78,11 +97,12 @@ struct NotesListView: View {
             } else {
                 List {
                     ForEach(filtered, id: \.objectID) { note in
-                        NavigationLink {
-                            NoteEditorView(note: note)
+                        Button {
+                            openNote(note)
                         } label: {
                             NoteRow(note: note)
                         }
+                        .buttonStyle(.plain)
                         .listRowBackground(Color.clear)
                         .swipeActions(edge: .leading) {
                             Button {
@@ -91,6 +111,13 @@ struct NotesListView: View {
                                 Label(note.isPinned ? "Открепить" : "Закрепить",
                                       systemImage: note.isPinned ? "pin.slash" : "pin")
                             }.tint(.orange)
+
+                            Button {
+                                Task { await toggleLock(note) }
+                            } label: {
+                                Label(note.isLocked ? "Снять защиту" : "Защитить",
+                                      systemImage: note.isLocked ? "lock.open" : "lock")
+                            }.tint(.indigo)
                         }
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
@@ -127,6 +154,36 @@ struct NotesListView: View {
 
     // MARK: - Actions
 
+    private func openNote(_ note: Note) {
+        if note.isLocked && !biometric.isUnlocked(note.id) {
+            Task {
+                let ok = await biometric.unlock(noteID: note.id,
+                                                reason: "Откройте «\(note.displayTitle)»")
+                if ok {
+                    openedNoteID = note.objectID
+                } else {
+                    lockErrorMessage = "Аутентификация не пройдена."
+                }
+            }
+        } else {
+            openedNoteID = note.objectID
+        }
+    }
+
+    private func toggleLock(_ note: Note) async {
+        let reason = note.isLocked
+            ? "Снять защиту с заметки"
+            : "Защитить заметку Face ID"
+        let ok = await biometric.confirmToggleProtection(reason: reason)
+        guard ok else { return }
+        note.isLocked.toggle()
+        if !note.isLocked {
+            // если сняли защиту — больше не считаем разблокированной отдельно
+        }
+        note.updatedAt = Date()
+        PersistenceController.shared.save()
+    }
+
     private func createNote() {
         let note = Note(context: ctx)
         note.id = UUID()
@@ -136,6 +193,7 @@ struct NotesListView: View {
         note.updatedAt = Date()
         note.tagsCSV = ""
         note.isPinned = false
+        note.isLocked = false
         note.folder = selectedFolder
         PersistenceController.shared.save()
         newNote = note
@@ -157,4 +215,5 @@ struct NotesListView: View {
     NotesListView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
         .environmentObject(AppSettings())
+        .environmentObject(BiometricAuth.shared)
 }

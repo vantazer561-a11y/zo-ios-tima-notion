@@ -26,11 +26,11 @@ struct SettingsView: View {
                 Section {
                     HStack {
                         if showKey {
-                            TextField("sk-…", text: $apiKey)
+                            TextField("fw_…", text: $apiKey)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                         } else {
-                            SecureField("sk-…", text: $apiKey)
+                            SecureField("fw_…", text: $apiKey)
                         }
                         Button {
                             showKey.toggle()
@@ -65,12 +65,12 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Ключ OpenAI")
+                    Text("Ключ Fireworks AI")
                 } footer: {
-                    Text("Ключ хранится только на устройстве в Keychain. Подойдёт любой OpenAI-совместимый провайдер (OpenAI, OpenRouter и т.д.).")
+                    Text("Ключ хранится только на устройстве в Keychain. Получить его можно на fireworks.ai → API Keys. По умолчанию используется Llama 3.3 70B Instruct.")
                 }
 
-                Section("Модель ИИ") {
+                Section {
                     TextField("Base URL", text: $settings.aiBaseURL)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
@@ -82,6 +82,49 @@ struct SettingsView: View {
                         Text("Русский").tag("ru")
                         Text("English").tag("en")
                     }
+                    HStack(spacing: 8) {
+                        Button {
+                            settings.aiBaseURL = "https://api.fireworks.ai/inference/v1"
+                            settings.aiModel   = "accounts/fireworks/models/llama-v3p3-70b-instruct"
+                        } label: {
+                            Label("Fireworks", systemImage: "flame.fill")
+                        }
+                        .buttonStyle(.bordered)
+                        Button {
+                            settings.aiBaseURL = "https://api.openai.com/v1"
+                            settings.aiModel   = "gpt-4o-mini"
+                        } label: {
+                            Label("OpenAI", systemImage: "circle.hexagongrid")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                } header: {
+                    Text("Модель ИИ")
+                } footer: {
+                    Text("Поддерживается любой OpenAI-совместимый API. Для Fireworks см. fireworks.ai/models — скопируйте идентификатор вида accounts/fireworks/models/…")
+                }
+
+                Section {
+                    let kind = BiometricAuth.shared.availableKind()
+                    HStack {
+                        Image(systemName: kind.systemImage)
+                            .font(.title3)
+                            .foregroundStyle(.tint)
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(kind.title)
+                                .font(.body)
+                            Text(kind == .none
+                                 ? "Биометрия недоступна на этом устройстве."
+                                 : "Используется для защиты приватных заметок.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Безопасность")
+                } footer: {
+                    Text("Чтобы защитить заметку, откройте её → меню ⋯ → «Защитить Face ID». Свайп влево по заметке в списке делает то же самое.")
                 }
 
                 Section("О приложении") {

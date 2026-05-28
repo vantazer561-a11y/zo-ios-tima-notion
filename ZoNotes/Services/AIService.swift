@@ -11,8 +11,8 @@ struct AISettings {
     var preferredLanguage: String
 
     static let `default` = AISettings(
-        baseURL: URL(string: "https://api.openai.com/v1")!,
-        model: "gpt-4o-mini",
+        baseURL: URL(string: "https://api.fireworks.ai/inference/v1")!,
+        model: "accounts/fireworks/models/llama-v3p3-70b-instruct",
         preferredLanguage: "ru"
     )
 }

@@ -1,56 +1,66 @@
 # ZoNotes 📝✨
 
-Современные iOS-заметки с встроенным ИИ. Чистый SwiftUI, CoreData, OpenAI-совместимый API.
+Современные iOS-заметки с встроенным ИИ от **Fireworks AI** и защитой **Face ID** для приватных записей.
 
 - **iOS 16.0+**
-- **Swift 5.9 / SwiftUI / CoreData**
-- **OpenAI-совместимый API** (ключ хранится в Keychain)
+- **Swift 5.9 · SwiftUI · CoreData**
+- **Fireworks AI** (Llama 3.3 70B по умолчанию, любой OpenAI-совместимый API)
+- **Face ID / Touch ID** для приватных заметок
 - Поиск, теги, папки, закрепление, Markdown-предпросмотр, ShareLink
 
 ## ИИ-возможности
 
-Все действия — в нижней панели редактора:
+В нижней панели редактора:
 
 - **Спросить ИИ** — свободный вопрос с контекстом заметки
 - Кратко изложить · Улучшить стиль · Сократить / Развернуть
 - Продолжить мысль · В список · Исправить ошибки
-- Перевод RU ↔ EN · Извлечь задачи · Подобрать заголовок
+- Перевод RU↔EN · Извлечь задачи · Подсказать заголовок
+
+## Защита заметок 🔒
+
+- В редакторе: меню `⋯` → **«Защитить Face ID»**
+- В списке: свайп влево → **«Защитить»**
+- При тапе по защищённой заметке система запросит Face ID / Touch ID
+- При уходе приложения в фон все разблокировки сбрасываются
+
+## Настройка ИИ
+
+1. Получите ключ на [fireworks.ai](https://fireworks.ai) → **API Keys**
+2. В приложении: **Настройки** → вставьте ключ → **«Сохранить»**
+3. По умолчанию используется `accounts/fireworks/models/llama-v3p3-70b-instruct`
+4. Кнопкой можно переключиться на OpenAI или вручную задать любой OpenAI-совместимый Base URL
+
+Ключ хранится только на устройстве в Keychain — он не уходит ни на какие сервера, кроме выбранного провайдера.
 
 ## Запуск
 
 ```bash
-# 1. Установите XcodeGen (один раз)
 brew install xcodegen
-
-# 2. Сгенерируйте Xcode-проект
+git clone https://github.com/vantazer561-a11y/zo-ios-tima-notion.git
 cd zo-ios-tima-notion
 xcodegen generate
-
-# 3. Откройте
 open ZoNotes.xcodeproj
 ```
 
-В Xcode выберите команду подписания (Signing & Capabilities → Team) и запустите на симуляторе или устройстве с iOS 16+.
+В Xcode выбрать команду в Signing & Capabilities и запустить.
 
-## Настройка ИИ
-
-1. Запустите приложение → ⚙️ **Настройки**
-2. Вставьте OpenAI-совместимый ключ (`sk-…`) → **Сохранить ключ**
-3. По умолчанию используется `gpt-4o-mini`. Можно сменить модель и Base URL (поддерживаются OpenRouter, локальные прокси и т.д.).
-
-> Ключ хранится **только** на устройстве в Keychain. Сервер не используется.
-
-## Структура
+## Архитектура
 
 ```
 ZoNotes/
-├── App/                 # точка входа, AppSettings, RootView
-├── Models/              # CoreData-модель и расширения
-├── Persistence/         # PersistenceController
-├── Services/            # AIService, KeychainStore
-├── Views/               # SwiftUI-экраны
-│   └── Components/
-└── Resources/           # Info.plist, Assets.xcassets
+├── App/                 ZoNotesApp · RootView · AppSettings
+├── Models/              CoreData-модель Note + Folder, расширения
+├── Persistence/         PersistenceController (боевой + preview)
+├── Services/            AIService · KeychainStore · BiometricAuth
+├── Views/
+│   ├── NotesListView    список + поиск + папки
+│   ├── NoteEditorView   редактор + AI-тулбар + меню
+│   ├── AskAISheet       свободный диалог с моделью
+│   ├── AIToolbar        быстрые AI-действия
+│   ├── MarkdownView     рендер превью
+│   ├── FolderManagerView · SettingsView · Components/
+└── Resources/           Assets.xcassets · Info.plist
 ```
 
 ## Лицензия

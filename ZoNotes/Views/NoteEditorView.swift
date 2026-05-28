@@ -4,6 +4,7 @@ struct NoteEditorView: View {
     @Environment(\.managedObjectContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var biometric: BiometricAuth
 
     @ObservedObject var note: Note
 
@@ -135,6 +136,12 @@ struct NoteEditorView: View {
                           systemImage: note.isPinned ? "pin.slash" : "pin")
                 }
                 Button {
+                    Task { await toggleLock() }
+                } label: {
+                    Label(note.isLocked ? "Снять защиту Face ID" : "Защитить Face ID",
+                          systemImage: note.isLocked ? "lock.open" : "lock")
+                }
+                Button {
                     showMoveSheet = true
                 } label: {
                     Label("Переместить в папку…", systemImage: "folder")
@@ -227,6 +234,19 @@ struct NoteEditorView: View {
     private func insert(text: String) {
         body_ += text
     }
+
+    // MARK: - Lock
+
+    private func toggleLock() async {
+        let reason = note.isLocked
+            ? "Снять защиту с заметки"
+            : "Защитить заметку Face ID"
+        let ok = await biometric.confirmToggleProtection(reason: reason)
+        guard ok else { return }
+        note.isLocked.toggle()
+        note.updatedAt = Date()
+        PersistenceController.shared.save()
+    }
 }
 
 #Preview {
@@ -235,4 +255,5 @@ struct NoteEditorView: View {
     }
     .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
     .environmentObject(AppSettings())
+    .environmentObject(BiometricAuth.shared)
 }

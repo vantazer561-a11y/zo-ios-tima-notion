@@ -2,6 +2,11 @@ import SwiftUI
 
 struct NoteRow: View {
     @ObservedObject var note: Note
+    @EnvironmentObject private var biometric: BiometricAuth
+
+    private var isVisible: Bool {
+        !note.isLocked || biometric.isUnlocked(note.id)
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -17,15 +22,25 @@ struct NoteRow: View {
                             .font(.caption2)
                             .foregroundStyle(.orange)
                     }
-                    Text(note.displayTitle)
+                    if note.isLocked {
+                        Image(systemName: isVisible ? "lock.open.fill" : "lock.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(isVisible ? note.displayTitle : "Защищённая заметка")
                         .font(.headline)
                         .lineLimit(1)
                 }
-                if !note.snippet.isEmpty {
+                if isVisible, !note.snippet.isEmpty {
                     Text(note.snippet)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
+                } else if !isVisible {
+                    Text("Разблокируйте, чтобы прочитать")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .italic()
                 }
                 HStack(spacing: 6) {
                     Text(note.updatedAt, format: .dateTime.day().month().hour().minute())
@@ -40,8 +55,10 @@ struct NoteRow: View {
                             .background(Color.secondary.opacity(0.12), in: Capsule())
                     }
 
-                    ForEach(note.tagList.prefix(3), id: \.self) { tag in
-                        TagChip(tag: tag)
+                    if isVisible {
+                        ForEach(note.tagList.prefix(3), id: \.self) { tag in
+                            TagChip(tag: tag)
+                        }
                     }
                 }
             }

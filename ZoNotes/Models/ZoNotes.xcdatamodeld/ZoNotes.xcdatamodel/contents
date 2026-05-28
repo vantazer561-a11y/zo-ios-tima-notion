@@ -6,6 +6,7 @@
         <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isPinned" optional="NO" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isLocked" optional="NO" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="tagsCSV" optional="NO" attributeType="String" defaultValueString=""/>
         <attribute name="title" optional="NO" attributeType="String" defaultValueString=""/>
         <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
