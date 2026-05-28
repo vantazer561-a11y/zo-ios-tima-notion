@@ -30,3 +30,5 @@ extension Folder {
     @objc(removeNotes:)
     @NSManaged public func removeFromNotes(_ values: NSSet)
 }
+
+extension Folder: Identifiable {}

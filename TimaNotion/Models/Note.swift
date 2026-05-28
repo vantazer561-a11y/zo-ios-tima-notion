@@ -19,3 +19,5 @@ public final class Note: NSManagedObject {
         NSFetchRequest<Note>(entityName: "Note")
     }
 }
+
+extension Note: Identifiable {}
