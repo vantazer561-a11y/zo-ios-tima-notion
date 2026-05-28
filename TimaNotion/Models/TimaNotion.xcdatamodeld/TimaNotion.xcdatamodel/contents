@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22522" systemVersion="23A344" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="NO" userDefinedModelVersionIdentifier="">
-    <entity name="Note" representedClassName="Note" syncable="YES" codeGenerationType="manual">
+    <entity name="Note" representedClassName="Note" syncable="YES">
         <attribute name="body" optional="NO" attributeType="String" defaultValueString=""/>
         <attribute name="colorHex" optional="YES" attributeType="String"/>
         <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
@@ -12,7 +12,7 @@
         <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="folder" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Folder" inverseName="notes" inverseEntity="Folder"/>
     </entity>
-    <entity name="Folder" representedClassName="Folder" syncable="YES" codeGenerationType="manual">
+    <entity name="Folder" representedClassName="Folder" syncable="YES">
         <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="NO" attributeType="String" defaultValueString="Без названия"/>
