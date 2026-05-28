@@ -4,7 +4,7 @@ import Security
 /// Тонкая обёртка над Keychain для хранения API-ключа ИИ.
 enum KeychainStore {
 
-    private static let service = "com.tima.zonotes.keychain"
+    private static let service = "com.tima.timanotion.keychain"
 
     static func set(_ value: String, for key: String) {
         delete(key)

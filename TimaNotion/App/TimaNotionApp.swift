@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct ZoNotesApp: App {
+struct TimaNotionApp: App {
 
     @StateObject private var settings = AppSettings()
     @StateObject private var biometric = BiometricAuth.shared
