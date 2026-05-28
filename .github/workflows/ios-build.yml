@@ -17,6 +17,11 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
 
+    env:
+      SCHEME: TimaNotion
+      CONFIGURATION: Release
+      DERIVED: build
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,43 +40,50 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build .app for device (unsigned, Release)
+      - name: Build unsigned .app for iOS device
         run: |
           set -o pipefail
           xcodebuild \
             -project TimaNotion.xcodeproj \
-            -scheme TimaNotion \
-            -configuration Release \
+            -scheme "$SCHEME" \
+            -configuration "$CONFIGURATION" \
             -destination "generic/platform=iOS" \
-            -derivedDataPath build \
-            -archivePath build/TimaNotion.xcarchive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
+            -derivedDataPath "$DERIVED" \
+            -sdk iphoneos \
             CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             CODE_SIGN_ENTITLEMENTS="" \
             DEVELOPMENT_TEAM="" \
-            archive
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            ENABLE_BITCODE=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            build
+
+      - name: Locate built .app
+        id: locate
+        run: |
+          APP_PATH="$(find $DERIVED/Build/Products -type d -name '*.app' | head -n 1)"
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::Built .app not found"
+            exit 1
+          fi
+          echo "APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
+          echo "Found: $APP_PATH"
 
       - name: Package unsigned IPA
         run: |
-          set -e
-          APP_PATH="build/TimaNotion.xcarchive/Products/Applications/TimaNotion.app"
-          if [ ! -d "$APP_PATH" ]; then
-            echo "::error::TimaNotion.app не найден по пути $APP_PATH"
-            ls -la build/TimaNotion.xcarchive/Products/Applications/ || true
-            exit 1
-          fi
-          mkdir -p artifacts/Payload
-          cp -R "$APP_PATH" artifacts/Payload/
-          cd artifacts
-          zip -qry "TimaNotion-unsigned.ipa" Payload
-          rm -rf Payload
+          mkdir -p ipa_build/Payload
+          cp -R "$APP_PATH" ipa_build/Payload/
+          cd ipa_build
+          zip -qry "../TimaNotion-unsigned.ipa" Payload
+          cd ..
           ls -lh TimaNotion-unsigned.ipa
 
-      - name: Upload unsigned IPA
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: TimaNotion-unsigned-ipa
-          path: artifacts/TimaNotion-unsigned.ipa
+          path: TimaNotion-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
